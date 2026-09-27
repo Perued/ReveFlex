@@ -3,11 +3,11 @@ name: Build ReveFlex
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # 允许你手动点击按钮触发编译
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest # 使用苹果 macOS 环境编译 iOS 插件最稳定
+    runs-on: macos-latest
 
     steps:
       - name: 检出仓库代码
@@ -16,7 +16,7 @@ jobs:
           submodules: recursive
 
       - name: 配置 Theos 编译环境
-        uses: theos/theos-action@v1
+        uses: Randomblock1/theos-action@v1
 
       - name: 开始编译插件
         run: make package
