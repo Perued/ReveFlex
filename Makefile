@@ -4,7 +4,7 @@ INSTALL_TARGET_PROCESSES = SpringBoard
 
 TWEAK_NAME = ReveFlex
 ReveFlex_FILES = $(wildcard ReveFlex/ReveFlex/*.m) $(wildcard ReveFlex/ReveFlex/*.mm) ReveFlex/ReveFlex/ReveFlex.xm
-ReveFlex_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
+ReveFlex_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-incomplete-implementation -Wno-error
 
 include $(THEOS)/makefiles/common.mk
 include $(THEOS_MAKE_PATH)/tweak.mk
