@@ -1,0 +1,9 @@
+Package: com.perued.reveflex
+Name: ReveFlex
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: ReveFlex runtime tweak
+Maintainer: Perued
+Author: Perued
+Section: Tweaks
+Depends: mobilesubstrate
