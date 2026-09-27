@@ -1,0 +1,85 @@
+# .github/workflows/ci.yml
+名称: CI & 构建 DEB: CI & Build DEB
+
+环境::
+  强制JavaScript操作到节点24: "true": "true"
+
+在：:
+  推::
+    分支: [ main ]: [ GGG ]
+  拉取请求::
+    分支: [ main ]: [ GGG ]
+
+工作::
+  构建::
+    运行于: ubuntu-latest: ubuntu-latest
+
+    步骤：:
+      # 1️⃣ 拉仓库# 1️⃣ 拉仓库
+      - 使用: actions/checkout@v5uses: actions/checkout@v5
+
+      # 2️⃣ 节点 24# 2️⃣ Node 24
+      - 使用: actions/setup-node@v5uses: actions/setup-node@v5
+        与：:
+          节点版本：24: 24
+
+      # ====== 以下都在 app/ 目录执行 ======# ====== 以下都在 app/ 目录执行 ======
+      # 3️⃣ 安装依赖并构建# 3️⃣ 安装依赖并构建
+      - name: 安装依赖并构建name: Install deps & build
+        工作目录: app: app
+        运行：|: |
+          npm install --no-audit --no-fund
+          npm run build            # 产物 => app/build/
+
+      # 4️⃣ 安装 fpm# 4️⃣ 安装 fpm
+      - name: 安装 fpmname: Install fpm
+        运行：|: |
+          sudo apt-get update -y
+          sudo apt-get install -y ruby ruby-dev build-essential
+          sudo gem install --no-document fpm
+
+      # 5️⃣ 打 .deb
+      - name: Build .deb package
+        working-directory: app
+        run: |
+          set -euo pipefail
+          APP_NAME="my-node-app"                      # **** 改成你的包名
+          VERSION=$(node -p "require('./package.json').version")
+
+          PKGROOT="$(pwd)/pkgroot"
+          BIN_DIR="$PKGROOT/usr/bin"
+          APP_DIR="$PKGROOT/usr/lib/$APP_NAME"
+
+          rm -rf "$PKGROOT"
+          mkdir -p "$BIN_DIR" "$APP_DIR"
+
+          # 仅复制编译结果
+          cp -R build/* "$APP_DIR"
+
+          # 生产依赖
+          pushd "$APP_DIR" >/dev/null
+          npm ci --omit=dev
+          popd >/dev/null
+
+          # 启动脚本
+          cat <<'SH' >"$BIN_DIR/$APP_NAME"
+          #!/usr/bin/env bash
+          exec node /usr/lib/$APP_NAME/index.js "$@"
+          SH
+          chmod +x "$BIN_DIR/$APP_NAME"
+
+          # fpm 打包
+          fpm -s dir -t deb \
+              -n "$APP_NAME" \
+              -v "$VERSION" \
+              -a all \
+              --maintainer "Your Name <you@example.com>" \
+              --description "My awesome Node.js CLI" \
+              --license "MIT" \
+              -C "$PKGROOT" .
+
+      # 6️⃣ 上传产物
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debian-package
+          path: app/*.deb
